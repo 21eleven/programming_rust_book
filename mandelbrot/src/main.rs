@@ -1,9 +1,10 @@
 use num::Complex;
+use std::fs::File;
 use std::str::FromStr;
+use image::ColorType;
+use image::png::PNGEncoder;
+use std::io::Write;
 
-fn main() {
-
-}
 /// Try to determine if `c` is in the Mandelbrot set, using at most `limit` 
 /// iterations to decide
 /// 
@@ -82,4 +83,39 @@ fn render(pixels: &mut [u8], bounds: (usize, usize),  upper_left: Complex<f64>, 
                 };
         }
     }
+}
+
+fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize)) -> Result<(), std::io::Error> {
+    let output = File::create(filename)?;
+
+    let encoder = PNGEncoder::new(output);
+    encoder.encode(&pixels,
+                   bounds.0 as u32, bounds.1 as u32,
+                   ColorType::Gray(8))?;
+    Ok(())               
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() != 5 {
+        writeln!(std::io::stderr(),
+                 "Use: mandelbrot FILE PIXELS UPPERLEFT LOWERRIGHT")
+            .unwrap();
+        writeln!(std::io::stderr(),
+                 "Example: {} mandel.png 1000x750 -1.20,0.35 -1,0.20",
+                 args[0]).unwrap();
+        std::process::exit(1);
+    }
+
+    let bounds = parse_pair::<usize>(&args[2], 'x')
+                    .expect("error parsing image dimensions");
+    let upper_left = parse_complex(&args[3]).expect("error parsing upper left corner point");
+    let lower_right= parse_complex(&args[4]).expect("error parsing lower right corner point");
+
+    let mut pixels = vec![0; bounds.0 * bounds.1];
+
+    render(&mut pixels, bounds, upper_left, lower_right);
+
+    write_image(&args[1], &pixels, bounds).expect("error writing png file");
 }

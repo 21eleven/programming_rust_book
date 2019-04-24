@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 num = "*"
+image = "0.13.0"
