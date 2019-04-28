@@ -125,7 +125,7 @@ fn main() {
 
     {
         let bands: Vec<&mut [u8]> =
-            pixels.chunks_mut(rows_per_band + bounds.0).collect();
+            pixels.chunks_mut(rows_per_band * bounds.0).collect();
         crossbeam::scope(|spawner| {
             for (i, band) in bands.into_iter().enumerate() {
                 let top = rows_per_band * i;
